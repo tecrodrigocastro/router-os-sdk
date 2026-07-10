@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-10
+
+### Added
+
+- `examples/` directory: runnable scripts for basic usage, event-driven
+  and interval streaming, the real write()+listen() concurrency proof via
+  `Io\Reactor`, and a Laravel Facade/DI usage pattern. Credentials come
+  from environment variables, never hardcoded.
+
 ## [0.2.1] - 2026-07-10
 
 ### Fixed
@@ -68,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.0...v0.1.1
