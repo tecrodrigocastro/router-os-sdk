@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-10
+
+### Fixed
+
+- CI failures on Windows: narrowed `orchestra/testbench` to `^8.0|^9.0`
+  (`^10.0` requires `phpunit/phpunit` `^11.x`, conflicting with our own
+  `^10.5`), and explicitly enabled the `fileinfo` PHP extension in the CI
+  setup step (`laravel/framework` 11.34+ requires it via
+  `league/flysystem-local`, and it isn't always enabled by default,
+  especially on Windows). Dev/CI-only — no change for package consumers.
+
 ## [0.2.0] - 2026-07-10
 
 ### Added
@@ -57,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tecrodrigocastro/router-os-sdk/releases/tag/v0.1.0
