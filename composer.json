@@ -29,6 +29,7 @@
     },
     "suggest": {
         "ext-swoole": "Enables non-blocking coroutine transport under Hyperf and Laravel Octane (Swoole mode)",
+        "ext-sodium": "For RouterOS\\Sdk\\Vpn\\WireGuard::generateKeypair()",
         "illuminate/support": "For the Laravel ServiceProvider/Facade integration",
         "hyperf/pool": "For the Hyperf coroutine connection pool integration"
     },
