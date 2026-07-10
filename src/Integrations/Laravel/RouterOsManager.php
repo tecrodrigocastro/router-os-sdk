@@ -4,6 +4,8 @@ namespace RouterOS\Sdk\Integrations\Laravel;
 
 use RouterOS\Sdk\Client;
 use RouterOS\Sdk\Exceptions\ConfigException;
+use RouterOS\Sdk\Exceptions\RecoverableException;
+use RouterOS\Sdk\Exceptions\TransportException;
 
 /**
  * Registry of named RouterOS connections, resolved lazily and cached —
@@ -20,26 +22,43 @@ use RouterOS\Sdk\Exceptions\ConfigException;
  * decision is left to the caller, who knows whether their specific command
  * is safe to retry; the manager only guarantees the *next* connection()
  * call gets a working connection instead of a known-dead one.
+ *
+ * Reconnect cooldown: if the router is genuinely unreachable, every
+ * connection() call would otherwise pay a full connect_timeout (10s
+ * default) trying and failing again — expensive under sustained queue
+ * throughput. After a RecoverableException from the connector, further
+ * attempts for that connection name fail immediately (no socket touched)
+ * until $reconnectCooldownSeconds have passed.
  */
 final class RouterOsManager
 {
     /** @var array<string, Client> */
     private array $connections = [];
 
+    /** @var array<string, float> connection name => microtime() of last failure */
+    private array $lastFailureAt = [];
+
     /** @var callable(array<string, mixed>): Client */
     private $connector;
+
+    /** @var callable(): float */
+    private $now;
 
     /**
      * @param array<string, array<string, mixed>> $connectionsConfig keyed by connection name
      * @param (callable(array<string, mixed>): Client)|null $connector override for tests —
      *        defaults to Client::connect($config) against a real socket
+     * @param (callable(): float)|null $now override for tests — defaults to microtime(true)
      */
     public function __construct(
         private readonly array $connectionsConfig,
         private readonly string $default,
         ?callable $connector = null,
+        private readonly float $reconnectCooldownSeconds = 5.0,
+        ?callable $now = null,
     ) {
         $this->connector = $connector ?? static fn (array $config): Client => Client::connect($config);
+        $this->now = $now ?? static fn (): float => microtime(true);
     }
 
     public function connection(?string $name = null): Client
@@ -54,7 +73,27 @@ final class RouterOsManager
             throw new ConfigException("RouterOS connection \"{$name}\" is not configured (see config/router-os.php)");
         }
 
-        return $this->connections[$name] = ($this->connector)($this->connectionsConfig[$name]);
+        if (isset($this->lastFailureAt[$name])) {
+            $elapsed = ($this->now)() - $this->lastFailureAt[$name];
+            if ($elapsed < $this->reconnectCooldownSeconds) {
+                $wait = round($this->reconnectCooldownSeconds - $elapsed, 1);
+                throw new TransportException(
+                    "RouterOS connection \"{$name}\" failed recently — skipping reconnect attempt for another {$wait}s"
+                );
+            }
+        }
+
+        try {
+            $client = ($this->connector)($this->connectionsConfig[$name]);
+        } catch (RecoverableException $e) {
+            $this->lastFailureAt[$name] = ($this->now)();
+
+            throw $e;
+        }
+
+        unset($this->lastFailureAt[$name]);
+
+        return $this->connections[$name] = $client;
     }
 
     /**

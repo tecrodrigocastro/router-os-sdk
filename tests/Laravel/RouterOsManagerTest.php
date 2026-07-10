@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use RouterOS\Sdk\Client;
 use RouterOS\Sdk\Connection;
 use RouterOS\Sdk\Exceptions\ConfigException;
+use RouterOS\Sdk\Exceptions\TransportException;
 use RouterOS\Sdk\Integrations\Laravel\RouterOsManager;
 use RouterOS\Sdk\Protocol\Word;
 use RouterOS\Sdk\Transport\FakeTransport;
@@ -142,6 +143,109 @@ final class RouterOsManagerTest extends TestCase
 
         $this->assertCount(2, $builds);
         $this->assertNotSame($first, $second);
+    }
+
+    public function testCooldownSkipsReconnectAttemptAfterAFailure(): void
+    {
+        $attempts = 0;
+        $clock    = 1000.0; // fake microtime(true), advanced manually below
+
+        $manager = new RouterOsManager(
+            connectionsConfig: ['main' => ['host' => 'a']],
+            default: 'main',
+            connector: function () use (&$attempts) {
+                $attempts++;
+
+                throw new TransportException('router unreachable');
+            },
+            reconnectCooldownSeconds: 5.0,
+            now: function () use (&$clock) {
+                return $clock;
+            },
+        );
+
+        try {
+            $manager->connection('main');
+            $this->fail('expected the first attempt to throw');
+        } catch (TransportException) {
+        }
+        $this->assertSame(1, $attempts);
+
+        // Still within the 5s cooldown — must NOT touch the connector again.
+        $clock += 2.0;
+        try {
+            $manager->connection('main');
+            $this->fail('expected the cooldown to still be active');
+        } catch (TransportException $e) {
+            $this->assertStringContainsString('skipping reconnect attempt', $e->getMessage());
+        }
+        $this->assertSame(1, $attempts, 'connector must not be called again during the cooldown window');
+
+        // Past the cooldown — attempts again (and fails again, recording a new timestamp).
+        $clock += 10.0;
+        try {
+            $manager->connection('main');
+            $this->fail('expected another real attempt past the cooldown');
+        } catch (TransportException) {
+        }
+        $this->assertSame(2, $attempts, 'connector must be retried once the cooldown has elapsed');
+    }
+
+    public function testFreshFailureAfterAnInterveningSuccessGetsItsOwnCooldown(): void
+    {
+        $clock      = 1000.0;
+        $shouldFail = true;
+        $attempts   = 0;
+        $lastClient = null;
+
+        $manager = new RouterOsManager(
+            connectionsConfig: ['main' => ['host' => 'a']],
+            default: 'main',
+            connector: function () use (&$shouldFail, &$attempts, &$lastClient) {
+                $attempts++;
+                if ($shouldFail) {
+                    throw new TransportException('router unreachable');
+                }
+
+                return $lastClient = Client::fromConnection(new Connection(new FakeTransport()));
+            },
+            reconnectCooldownSeconds: 5.0,
+            now: function () use (&$clock) {
+                return $clock;
+            },
+        );
+
+        // Failure #1 at t=1000.
+        try {
+            $manager->connection('main');
+        } catch (TransportException) {
+        }
+        $this->assertSame(1, $attempts);
+
+        // Past that cooldown (t=1006) — succeeds.
+        $clock = 1006.0;
+        $shouldFail = false;
+        $manager->connection('main');
+        $this->assertSame(2, $attempts);
+
+        // That connection dies; failure #2 happens at the SAME instant (t=1006).
+        $lastClient->close();
+        $shouldFail = true;
+        try {
+            $manager->connection('main');
+        } catch (TransportException) {
+        }
+        $this->assertSame(3, $attempts, 'the earlier success must not block this fresh failure attempt');
+
+        // Only 2s after failure #2 (t=1008) — still within ITS OWN 5s cooldown.
+        $clock = 1008.0;
+        try {
+            $manager->connection('main');
+            $this->fail('expected the cooldown from failure #2 (at t=1006) to still be active');
+        } catch (TransportException $e) {
+            $this->assertStringContainsString('skipping reconnect attempt', $e->getMessage());
+        }
+        $this->assertSame(3, $attempts, 'connector must not run again during failure #2\'s cooldown window');
     }
 
     public function testMagicCallForwardsToDefaultConnection(): void
