@@ -43,10 +43,24 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.5"
+        "phpunit/phpunit": "^10.5",
+        "orchestra/testbench": "^8.0|^9.0|^10.0"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "RouterOS\\Sdk\\Integrations\\Laravel\\ServiceProvider"
+            ],
+            "aliases": {
+                "RouterOs": "RouterOS\\Sdk\\Integrations\\Laravel\\Facade"
+            }
+        }
     },
     "scripts": {
         "test": "phpunit"
