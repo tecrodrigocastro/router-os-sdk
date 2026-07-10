@@ -131,12 +131,61 @@ $morosos->block('10.0.0.5', comment: 'Contract #123'); // idempotent — no dupl
 $morosos->isBlocked('10.0.0.5');
 $morosos->unblock('10.0.0.5');
 
-// Bandwidth shaping
+// Bandwidth shaping — flat (SimpleQueue) or hierarchical (QueueTree)
 $client->simpleQueue()->create('joao', '10.0.0.5/32', '20M/20M');
 $client->simpleQueue()->setMaxLimit('joao', '5M/5M');
+$client->queueTree()->create('joao', parent: 'total-download', packetMark: 'joao-mark', maxLimit: '20M');
+
+// PPP profiles (rate-limit templates secrets reference)
+$client->pppProfiles()->create('vip', rateLimit: '50M/50M');
+
+// Idempotent firewall rule installation, keyed by comment
+$client->firewall()->ensureRule('filter', [
+    'chain'            => 'forward',
+    'src-address-list' => 'morosos',
+    'action'           => 'drop',
+], comment: 'block-morosos'); // no-op if a rule with this comment already exists
+
+// Unified suspend/activate: each action (address/PPP/queue) runs
+// independently, so one failing (e.g. the queue doesn't exist) doesn't
+// stop the others — you get back exactly what succeeded and what failed.
+$result = $client->customer('joao')->suspend(address: '10.0.0.5', pppUser: 'joao', queueName: 'joao');
+$result->succeeded; // e.g. ['address_list', 'ppp_disabled']
+$result->failed;    // e.g. ['queue_disabled' => 'no such item']
+$client->customer('joao')->activate(address: '10.0.0.5', pppUser: 'joao', queueName: 'joao');
 ```
 
 See `examples/isp-toolkit.php` for a runnable version.
+
+### VPN (WireGuard)
+
+`RouterOS\Sdk\Vpn\WireGuard` configures RouterOS 7's native WireGuard
+support — no separate VPN server product needed for the common "router
+dials home to a central hub" pattern:
+
+```php
+use RouterOS\Sdk\Vpn\WireGuard;
+
+$wg = $client->wireGuard('to-hq');
+$wg->createInterface(listenPort: 51820); // RouterOS generates a keypair if none given
+$wg->addPeer(
+    publicKey: 'base64-hub-public-key',
+    allowedAddress: '10.200.0.2/32',
+    endpointHost: 'vpn.example.com',
+    endpointPort: 51820,
+);
+```
+
+If you need a keypair *before* the router has one (e.g. registering it as
+a peer on a hub ahead of time), `WireGuard::generateKeypair()` produces a
+RouterOS-compatible one (requires `ext-sodium`, bundled with PHP but not
+always enabled — falls back to a clear exception telling you to enable it
+or generate keys another way, e.g. the `wg genkey`/`wg pubkey` CLI tools).
+
+For a router with no connectivity yet, `WireGuardBootstrapScript::generate()`
+produces a `.rsc` script a field technician can paste into its terminal
+on-site — see `examples/wireguard-bootstrap.php` (needs no router to run,
+it's pure string generation).
 
 ### Laravel
 
@@ -249,7 +298,7 @@ composer install
 composer test
 ```
 
-107 tests, including a real end-to-end test over a loopback TCP socket and a
+139 tests, including a real end-to-end test over a loopback TCP socket and a
 genuine two-Fiber concurrency test against a real socket.
 
 ## Roadmap

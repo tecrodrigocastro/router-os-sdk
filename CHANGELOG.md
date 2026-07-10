@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-10
+
+### Added
+
+- `RouterOS\Sdk\Vpn\WireGuard`: configure RouterOS 7's native WireGuard
+  support (interface + peers) — `Client::wireGuard($interfaceName)`.
+  `WireGuard::generateKeypair()` (requires `ext-sodium`, suggested not
+  required) for when you need a keypair before the router has one.
+- `RouterOS\Sdk\Vpn\WireGuardBootstrapScript`: generates a `.rsc` script
+  for bootstrapping WireGuard on a router with no connectivity yet (pure
+  string templating, no connection needed).
+- `RouterOS\Sdk\Isp\Customer`: unified `suspend()`/`activate()` touching
+  address-list, PPP secret, and queue — each action runs independently
+  (one failing doesn't stop the others), returning a `CustomerActionResult`
+  with per-action success/failure.
+- `RouterOS\Sdk\Isp\PppProfiles`, `QueueTree`, `Firewall` (idempotent rule
+  installation keyed by comment) — `Client::pppProfiles()`/`queueTree()`/`firewall()`.
+- `PppSecrets::disable()`/`enable()`, `SimpleQueue::disable()`/`enable()`.
+
 ## [0.4.0] - 2026-07-10
 
 ### Added
@@ -125,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...v0.3.0
