@@ -49,6 +49,10 @@ composer require tecrodrigocastro/router-os-sdk
 
 ## Quick start
 
+See the [`examples/`](examples/) directory for runnable scripts against a
+real router (basic usage, streaming, and the concurrent `write()`+`listen()`
+proof), plus a Laravel usage pattern.
+
 ```php
 use RouterOS\Sdk\Client;
 
