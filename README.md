@@ -1,5 +1,6 @@
 # router-os-sdk
 
+[![Tests](https://github.com/tecrodrigocastro/router-os-sdk/actions/workflows/tests.yml/badge.svg)](https://github.com/tecrodrigocastro/router-os-sdk/actions/workflows/tests.yml)
 [![Packagist Version](https://img.shields.io/packagist/v/tecrodrigocastro/router-os-sdk.svg)](https://packagist.org/packages/tecrodrigocastro/router-os-sdk)
 [![License](https://img.shields.io/github/license/tecrodrigocastro/router-os-sdk.svg)](LICENSE)
 [![PHP Version](https://img.shields.io/packagist/php-v/tecrodrigocastro/router-os-sdk.svg)](composer.json)
