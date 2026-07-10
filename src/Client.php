@@ -4,6 +4,9 @@ namespace RouterOS\Sdk;
 
 use RouterOS\Sdk\Auth\Authenticator;
 use RouterOS\Sdk\Io\Reactor;
+use RouterOS\Sdk\Isp\AddressList;
+use RouterOS\Sdk\Isp\PppSecrets;
+use RouterOS\Sdk\Isp\SimpleQueue;
 
 /**
  * Public entry point: connect, authenticate, and issue commands/streams.
@@ -16,6 +19,13 @@ use RouterOS\Sdk\Io\Reactor;
  */
 final class Client
 {
+    private ?PppSecrets $pppSecrets = null;
+
+    private ?SimpleQueue $simpleQueue = null;
+
+    /** @var array<string, AddressList> */
+    private array $addressLists = [];
+
     private function __construct(private readonly Connection $connection)
     {
     }
@@ -84,6 +94,103 @@ final class Client
     public function interval(string $endpoint, int $seconds, array $words = []): Channel
     {
         return $this->connection->interval($endpoint, $seconds, $words);
+    }
+
+    /**
+     * "Find" half of RouterOS's near-universal add/print/set/remove
+     * resource convention: a /print with one equality filter per entry in
+     * $filters (e.g. ['name' => 'joao'] -> "?name=joao"), built via Query
+     * rather than reimplementing word-building.
+     *
+     * @param string $resource e.g. "/ppp/secret" (no trailing /print)
+     * @param array<string, string> $filters
+     * @return array<int, array<string, string>>
+     */
+    public function findWhere(string $resource, array $filters = []): array
+    {
+        $query = new Query(rtrim($resource, '/') . '/print');
+        foreach ($filters as $key => $value) {
+            $query->where((string) $key, (string) $value);
+        }
+
+        return $this->query($query);
+    }
+
+    /**
+     * @param array<string, string> $filters
+     * @return array<string, string>|null the first matching row, or null if none
+     */
+    public function findOne(string $resource, array $filters = []): ?array
+    {
+        return $this->findWhere($resource, $filters)[0] ?? null;
+    }
+
+    /**
+     * Find rows matching $filters and /remove each one by its .id.
+     *
+     * @param array<string, string> $filters
+     * @return int how many rows were removed
+     */
+    public function removeWhere(string $resource, array $filters): int
+    {
+        $resource = rtrim($resource, '/');
+        $removed  = 0;
+
+        foreach ($this->findWhere($resource, $filters) as $row) {
+            if (isset($row['.id'])) {
+                $this->write($resource . '/remove', ['=.id=' . $row['.id']]);
+                $removed++;
+            }
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Find rows matching $filters and /set each one with $updates.
+     *
+     * @param array<string, string> $filters
+     * @param array<string, string> $updates
+     * @return int how many rows were updated
+     */
+    public function setWhere(string $resource, array $filters, array $updates): int
+    {
+        $resource = rtrim($resource, '/');
+        $updated  = 0;
+
+        foreach ($this->findWhere($resource, $filters) as $row) {
+            if (!isset($row['.id'])) {
+                continue;
+            }
+
+            $words = ['=.id=' . $row['.id']];
+            foreach ($updates as $key => $value) {
+                $words[] = "={$key}={$value}";
+            }
+
+            $this->write($resource . '/set', $words);
+            $updated++;
+        }
+
+        return $updated;
+    }
+
+    /** PPPoE secrets/active sessions (see RouterOS\Sdk\Isp\PppSecrets) */
+    public function pppSecrets(): PppSecrets
+    {
+        return $this->pppSecrets ??= new PppSecrets($this);
+    }
+
+    /** One named firewall address-list, e.g. "morosos" (see RouterOS\Sdk\Isp\AddressList) */
+    public function addressList(string $listName): AddressList
+    {
+        return $this->addressLists[$listName] ??= new AddressList($this, $listName);
+    }
+
+    /** Simple queues / bandwidth shaping (see RouterOS\Sdk\Isp\SimpleQueue) */
+    public function simpleQueue(): SimpleQueue
+    {
+        return $this->simpleQueue ??= new SimpleQueue($this);
     }
 
     public function close(): void
