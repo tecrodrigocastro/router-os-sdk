@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-10
+
+### Added
+
+- `Client::registerConnection()`-equivalent for the Laravel integration:
+  `RouterOsManager::registerConnection()`/`hasConnection()`/
+  `forgetConnectionConfig()` — register/deregister a connection at
+  runtime, for routers stored as database rows rather than a static
+  `config/router-os.php` list.
+- `Client::findWhere()`/`findOne()`/`removeWhere()`/`setWhere()` — generic
+  helpers for RouterOS's near-universal `add`/`print`/`set`/`remove`
+  resource convention (find by filter, then act on the matched `.id`),
+  built entirely on the existing `Query`/`write()` primitives.
+- `RouterOS\Sdk\Isp\*` toolkit: `PppSecrets` (PPPoE secrets + active
+  sessions), `AddressList` (firewall address-list blocking, e.g.
+  delinquent customers), `SimpleQueue` (bandwidth shaping) — exposed via
+  `Client::pppSecrets()`/`addressList()`/`simpleQueue()`.
+- `examples/isp-toolkit.php`.
+
 ## [0.3.1] - 2026-07-10
 
 ### Changed
@@ -106,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...v0.2.2

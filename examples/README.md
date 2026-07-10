@@ -17,8 +17,11 @@ ROUTEROS_HOST=192.168.88.1 ROUTEROS_USER=admin ROUTEROS_PASS=secret php examples
 | `streaming-interval.php` | `=interval=N` push stream (`/system/resource/print` every 2s). |
 | `concurrent-reactor.php` | The core claim proven live: `write()` once/sec **while** a `listen()` stream stays open, both on one connection via `Io\Reactor`. |
 | `managed-client.php` | Long-running supervisor (`ManagedClient`): reconnects with exponential backoff if the connection dies — try unplugging the router's cable while this runs. |
+| `isp-toolkit.php` | ISP domain helpers (`RouterOS\Sdk\Isp\*`): create a PPPoE secret, block/unblock an address list entry, create a bandwidth queue — then cleans up everything it created. |
 | `laravel-usage.php` | Not runnable standalone — illustrates the Facade/DI patterns for a real Laravel app (see the main README's Laravel section for setup). |
 
 All of these except `laravel-usage.php` require an actual reachable
 RouterOS device; `concurrent-reactor.php` and `managed-client.php` are the
-most interesting ones to run.
+most interesting ones to run. **`isp-toolkit.php` writes to the router**
+(creates and then removes a secret/address-list entry/queue) — point it at
+a lab router, not production.

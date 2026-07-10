@@ -97,6 +97,47 @@ $query->where('disabled', 'false')
 $running = $client->query($query);
 ```
 
+### Find/act helpers
+
+Most RouterOS resources follow the same `add`/`print`/`set`/`remove`
+convention under one path (e.g. `/ppp/secret/{add,print,set,remove}`).
+These four `Client` methods cover the common "find by filter, then act on
+`.id`" pattern without writing it out by hand each time:
+
+```php
+$secret = $client->findOne('/ppp/secret', ['name' => 'joao']);      // first match, or null
+$secrets = $client->findWhere('/ppp/secret', ['service' => 'pppoe']); // all matches
+$client->removeWhere('/ppp/secret', ['name' => 'joao']);              // find + /remove each match
+$client->setWhere('/ppp/secret', ['name' => 'joao'], ['profile' => 'vip']); // find + /set each match
+```
+
+### ISP toolkit
+
+`RouterOS\Sdk\Isp\*` are small convenience wrappers (built entirely on the
+find/act helpers above — no protocol-level code of their own) for the
+operations a PPPoE-based ISP panel needs most: provisioning a customer,
+suspending them for non-payment, and shaping their bandwidth.
+
+```php
+// PPPoE secrets + active sessions
+$client->pppSecrets()->create('joao', 'senha123', profile: 'default');
+$client->pppSecrets()->isOnline('joao');
+$client->pppSecrets()->kill('joao'); // drop the session so it reconnects with fresh RADIUS/profile attrs
+$client->pppSecrets()->remove('joao');
+
+// Firewall address-list, e.g. blocking delinquent customers
+$morosos = $client->addressList('morosos');
+$morosos->block('10.0.0.5', comment: 'Contract #123'); // idempotent — no duplicate entry on retry
+$morosos->isBlocked('10.0.0.5');
+$morosos->unblock('10.0.0.5');
+
+// Bandwidth shaping
+$client->simpleQueue()->create('joao', '10.0.0.5/32', '20M/20M');
+$client->simpleQueue()->setMaxLimit('joao', '5M/5M');
+```
+
+See `examples/isp-toolkit.php` for a runnable version.
+
 ### Laravel
 
 The `ServiceProvider`/`Facade` are auto-discovered — just install the
@@ -125,6 +166,23 @@ command reached the router and only the reply was lost. If the router is
 genuinely unreachable, further calls fail immediately (no full
 `connect_timeout` wait) for `reconnectCooldownSeconds` (default 5) after a
 failure, instead of every job/request paying the full timeout again.
+
+If your routers aren't known statically at boot — e.g. one row per
+customer/site in a database, rather than a fixed `config/router-os.php`
+list — register them at runtime instead:
+
+```php
+use RouterOS\Sdk\Integrations\Laravel\RouterOsManager;
+
+app(RouterOsManager::class)->registerConnection("equipment-{$equipment->id}", [
+    'host' => $equipment->ip_address,
+    'user' => $equipment->api_user,
+    'pass' => $equipment->api_pass,
+    'port' => $equipment->api_port,
+]);
+
+RouterOs::connection("equipment-{$equipment->id}")->write(...);
+```
 
 ### Resilience: reconnecting for long-running processes
 
@@ -191,7 +249,7 @@ composer install
 composer test
 ```
 
-83 tests, including a real end-to-end test over a loopback TCP socket and a
+107 tests, including a real end-to-end test over a loopback TCP socket and a
 genuine two-Fiber concurrency test against a real socket.
 
 ## Roadmap
