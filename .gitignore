@@ -2,3 +2,8 @@
 composer.lock
 .phpunit.result.cache
 .phpunit.cache/
+
+# Ad-hoc local scripts against a real router — these contain real
+# credentials (host/user/pass), never commit them.
+/smoke-test.php
+/manual-test-*.php
