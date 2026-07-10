@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-10
+
+### Added
+
+- GitHub Actions CI running the test suite on PHP 8.1-8.4 (Ubuntu) and
+  PHP 8.4 (Windows), with a status badge in the README.
+- This CHANGELOG.
+
+### Changed
+
+- Rewrote the README for public release: badges, a "Why" section, a
+  features list, `composer require` instructions, a query builder example,
+  and a roadmap.
+
 ## [0.1.0] - 2026-07-10
 
 ### Added
@@ -30,5 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tecrodrigocastro/router-os-sdk/releases/tag/v0.1.0
