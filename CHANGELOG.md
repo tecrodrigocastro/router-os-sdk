@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-10
+
+### Changed
+
+- **Package renamed on Packagist**: `tecrodrigocastro/router-os-sdk` →
+  `redrodrigo/router-os-sdk`. Update your `composer.json` accordingly
+  (`composer remove tecrodrigocastro/router-os-sdk && composer require redrodrigo/router-os-sdk`).
+  The GitHub repository itself is unchanged
+  (github.com/tecrodrigocastro/router-os-sdk).
+
 ## [0.3.0] - 2026-07-10
 
 ### Added
@@ -96,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...v0.2.1
