@@ -5,8 +5,13 @@ namespace RouterOS\Sdk;
 use RouterOS\Sdk\Auth\Authenticator;
 use RouterOS\Sdk\Io\Reactor;
 use RouterOS\Sdk\Isp\AddressList;
+use RouterOS\Sdk\Isp\Customer;
+use RouterOS\Sdk\Isp\Firewall;
+use RouterOS\Sdk\Isp\PppProfiles;
 use RouterOS\Sdk\Isp\PppSecrets;
+use RouterOS\Sdk\Isp\QueueTree;
 use RouterOS\Sdk\Isp\SimpleQueue;
+use RouterOS\Sdk\Vpn\WireGuard;
 
 /**
  * Public entry point: connect, authenticate, and issue commands/streams.
@@ -21,10 +26,22 @@ final class Client
 {
     private ?PppSecrets $pppSecrets = null;
 
+    private ?PppProfiles $pppProfiles = null;
+
     private ?SimpleQueue $simpleQueue = null;
+
+    private ?QueueTree $queueTree = null;
+
+    private ?Firewall $firewall = null;
 
     /** @var array<string, AddressList> */
     private array $addressLists = [];
+
+    /** @var array<string, Customer> */
+    private array $customers = [];
+
+    /** @var array<string, WireGuard> */
+    private array $wireGuards = [];
 
     private function __construct(private readonly Connection $connection)
     {
@@ -191,6 +208,40 @@ final class Client
     public function simpleQueue(): SimpleQueue
     {
         return $this->simpleQueue ??= new SimpleQueue($this);
+    }
+
+    /** PPP profiles / rate-limit templates (see RouterOS\Sdk\Isp\PppProfiles) */
+    public function pppProfiles(): PppProfiles
+    {
+        return $this->pppProfiles ??= new PppProfiles($this);
+    }
+
+    /** Hierarchical bandwidth shaping (see RouterOS\Sdk\Isp\QueueTree) */
+    public function queueTree(): QueueTree
+    {
+        return $this->queueTree ??= new QueueTree($this);
+    }
+
+    /** Idempotent firewall rule installation (see RouterOS\Sdk\Isp\Firewall) */
+    public function firewall(): Firewall
+    {
+        return $this->firewall ??= new Firewall($this);
+    }
+
+    /**
+     * Unified suspend/activate for one customer (see RouterOS\Sdk\Isp\Customer).
+     *
+     * @param string $blockListName the address-list this customer's suspend()/activate() uses
+     */
+    public function customer(string $identifier, string $blockListName = 'suspended'): Customer
+    {
+        return $this->customers[$identifier] ??= new Customer($this, $identifier, $blockListName);
+    }
+
+    /** One named WireGuard interface (see RouterOS\Sdk\Vpn\WireGuard) */
+    public function wireGuard(string $interfaceName): WireGuard
+    {
+        return $this->wireGuards[$interfaceName] ??= new WireGuard($this, $interfaceName);
     }
 
     public function close(): void
