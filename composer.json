@@ -1,5 +1,5 @@
 {
-    "name": "tecrodrigocastro/router-os-sdk",
+    "name": "redrodrigo/router-os-sdk",
     "type": "library",
     "description": "Async-capable Mikrotik RouterOS API client for PHP (Fiber-based, optional Swoole transport, Laravel/Hyperf integrations)",
     "keywords": [

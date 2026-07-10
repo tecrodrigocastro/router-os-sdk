@@ -8,7 +8,7 @@
  *
  * Setup, once per app:
  *
- *   composer require tecrodrigocastro/router-os-sdk
+ *   composer require redrodrigo/router-os-sdk
  *   php artisan vendor:publish --provider="RouterOS\Sdk\Integrations\Laravel\ServiceProvider" --tag=config
  *
  * Then fill in config/router-os.php (or the ROUTEROS_* env vars it reads

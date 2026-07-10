@@ -1,9 +1,9 @@
 # router-os-sdk
 
 [![Tests](https://github.com/tecrodrigocastro/router-os-sdk/actions/workflows/tests.yml/badge.svg)](https://github.com/tecrodrigocastro/router-os-sdk/actions/workflows/tests.yml)
-[![Packagist Version](https://img.shields.io/packagist/v/tecrodrigocastro/router-os-sdk.svg)](https://packagist.org/packages/tecrodrigocastro/router-os-sdk)
+[![Packagist Version](https://img.shields.io/packagist/v/redrodrigo/router-os-sdk.svg)](https://packagist.org/packages/redrodrigo/router-os-sdk)
 [![License](https://img.shields.io/github/license/tecrodrigocastro/router-os-sdk.svg)](LICENSE)
-[![PHP Version](https://img.shields.io/packagist/php-v/tecrodrigocastro/router-os-sdk.svg)](composer.json)
+[![PHP Version](https://img.shields.io/packagist/php-v/redrodrigo/router-os-sdk.svg)](composer.json)
 
 Async-capable PHP client for the **Mikrotik RouterOS binary API** — connect
 to a router over TCP/TLS, run commands, and consume multiple real-time
@@ -48,7 +48,7 @@ only show up once you push a client hard in production.
 ## Install
 
 ```bash
-composer require tecrodrigocastro/router-os-sdk
+composer require redrodrigo/router-os-sdk
 ```
 
 ## Quick start
