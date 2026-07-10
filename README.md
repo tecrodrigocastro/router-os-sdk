@@ -36,6 +36,10 @@ only show up once you push a client hard in production.
   (RouterOS 7.18+), unknown/expired tag packets, multi-block `!done`
   responses on some wireless APs, and the `!done`-as-cycle-boundary
   semantics of `=interval=N` streams.
+- **Resilience**: `ManagedClient` reconnects with exponential backoff for
+  long-running processes; the Laravel `RouterOsManager` auto-heals a dead
+  connection on next use and fails fast (no full `connect_timeout` wait)
+  if the router recently failed.
 
 ## Requirements
 
@@ -117,7 +121,46 @@ that goes dead (`Client::isClosed()`) is rebuilt on the *next* call, which
 matters for long-lived processes (queue workers, Octane) — but it never
 silently retries the command that actually failed, since that could
 double-execute a non-idempotent one (e.g. `/ip/address/add`) if the
-command reached the router and only the reply was lost.
+command reached the router and only the reply was lost. If the router is
+genuinely unreachable, further calls fail immediately (no full
+`connect_timeout` wait) for `reconnectCooldownSeconds` (default 5) after a
+failure, instead of every job/request paying the full timeout again.
+
+### Resilience: reconnecting for long-running processes
+
+For a daemon-style script or Artisan command that's meant to run forever
+(not a request-scoped web/queue context — see the Laravel section above
+for that), `ManagedClient` is the PHP equivalent of MikroDash's Node `ROS`
+class `connectLoop()`: connect, hand a working `Client` to your setup code,
+and if the connection dies, reconnect with exponential backoff and hand
+over a fresh one again.
+
+```php
+use RouterOS\Sdk\ManagedClient;
+
+$managed = new ManagedClient($config);
+
+$managed->onConnected(function ($client) {
+    $arp = $client->listen('/ip/arp/listen');
+    while (true) {
+        $row = $arp->wait(); // throws when the connection dies, ending this cycle
+        // handle $row
+    }
+});
+
+$managed->onDisconnected(function () {
+    // e.g. log it — a reconnect (with backoff) is about to be attempted
+});
+
+$managed->run(); // blocks until $managed->stop() is called
+```
+
+`ManagedClient` doesn't try to be a generic scheduler — it only notices a
+connection cycle ended (the callback returned, or threw) and reconnects.
+For concurrent work inside a cycle (`write()` + `listen()` at once), pass a
+`Reactor` to its constructor and drive your own Fiber + `Reactor::tick()`
+loop inside the callback, same as `examples/concurrent-reactor.php`. See
+`examples/managed-client.php` for a runnable version.
 
 ### Concurrency
 
@@ -148,7 +191,7 @@ composer install
 composer test
 ```
 
-77 tests, including a real end-to-end test over a loopback TCP socket and a
+83 tests, including a real end-to-end test over a loopback TCP socket and a
 genuine two-Fiber concurrency test against a real socket.
 
 ## Roadmap

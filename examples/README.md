@@ -16,8 +16,9 @@ ROUTEROS_HOST=192.168.88.1 ROUTEROS_USER=admin ROUTEROS_PASS=secret php examples
 | `streaming-listen.php` | Event-driven stream (`/ip/arp/listen`) — one payload per change. |
 | `streaming-interval.php` | `=interval=N` push stream (`/system/resource/print` every 2s). |
 | `concurrent-reactor.php` | The core claim proven live: `write()` once/sec **while** a `listen()` stream stays open, both on one connection via `Io\Reactor`. |
+| `managed-client.php` | Long-running supervisor (`ManagedClient`): reconnects with exponential backoff if the connection dies — try unplugging the router's cable while this runs. |
 | `laravel-usage.php` | Not runnable standalone — illustrates the Facade/DI patterns for a real Laravel app (see the main README's Laravel section for setup). |
 
-`basic-usage.php`, `streaming-listen.php`, and `streaming-interval.php` all
-require an actual reachable RouterOS device; `concurrent-reactor.php` too,
-and is the most interesting one to run.
+All of these except `laravel-usage.php` require an actual reachable
+RouterOS device; `concurrent-reactor.php` and `managed-client.php` are the
+most interesting ones to run.

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-10
+
+### Added
+
+- `ManagedClient`: a supervisor for long-running processes (daemon
+  scripts, Artisan commands) that connects, hands a working `Client` to
+  `onConnected()`, and reconnects with exponential backoff if the
+  connection dies — the PHP equivalent of MikroDash's `ROS.connectLoop()`.
+- `RouterOsManager` (Laravel integration): a reconnect cooldown —
+  after a connection failure, further attempts for that connection name
+  fail immediately (`reconnectCooldownSeconds`, default 5) instead of each
+  one paying a full `connect_timeout`, which matters under sustained queue
+  worker throughput when the router is genuinely down.
+- `RouterOS\Sdk\Exceptions\RecoverableException`: a marker interface
+  (implemented by `TransportException` and `BadCredentialsException`)
+  distinguishing transient connection/auth failures worth retrying from
+  programming errors (`ConfigException`, `QueryException`) that shouldn't be.
+- `examples/managed-client.php`.
+
 ## [0.2.2] - 2026-07-10
 
 ### Added
@@ -77,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...v0.2.0
