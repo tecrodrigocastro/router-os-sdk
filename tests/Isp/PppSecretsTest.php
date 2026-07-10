@@ -130,4 +130,54 @@ final class PppSecretsTest extends TestCase
         $this->assertStringContainsString('/ppp/active/remove', $sent);
         $this->assertStringContainsString('=.id=*3', $sent);
     }
+
+    public function testDisableSetsDisabledYes(): void
+    {
+        $transport = new FakeTransport();
+        $transport->pushRead(
+            $this->sentenceBytes('!re', ['=.id=*5', '=name=joao', '.tag=1'])
+            . $this->sentenceBytes('!done', ['.tag=1'])
+        );
+
+        $client = Client::fromConnection(new Connection($transport));
+        $secrets = $client->pppSecrets();
+
+        $result = null;
+        $fiber = new \Fiber(function () use ($secrets, &$result) {
+            $result = $secrets->disable('joao');
+        });
+        $fiber->start();
+        $this->assertTrue($fiber->isSuspended());
+        $transport->pushRead($this->sentenceBytes('!done', ['.tag=2']));
+
+        $this->assertTrue($result);
+        $sent = implode('', $transport->writtenLog());
+        $this->assertStringContainsString('/ppp/secret/set', $sent);
+        $this->assertStringContainsString('=disabled=yes', $sent);
+    }
+
+    public function testEnableSetsDisabledNo(): void
+    {
+        $transport = new FakeTransport();
+        $transport->pushRead(
+            $this->sentenceBytes('!re', ['=.id=*5', '=name=joao', '.tag=1'])
+            . $this->sentenceBytes('!done', ['.tag=1'])
+        );
+
+        $client = Client::fromConnection(new Connection($transport));
+        $secrets = $client->pppSecrets();
+
+        $result = null;
+        $fiber = new \Fiber(function () use ($secrets, &$result) {
+            $result = $secrets->enable('joao');
+        });
+        $fiber->start();
+        $this->assertTrue($fiber->isSuspended());
+        $transport->pushRead($this->sentenceBytes('!done', ['.tag=2']));
+
+        $this->assertTrue($result);
+        $sent = implode('', $transport->writtenLog());
+        $this->assertStringContainsString('/ppp/secret/set', $sent);
+        $this->assertStringContainsString('=disabled=no', $sent);
+    }
 }

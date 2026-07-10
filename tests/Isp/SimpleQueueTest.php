@@ -82,4 +82,29 @@ final class SimpleQueueTest extends TestCase
 
         $this->assertFalse($client->simpleQueue()->remove('ghost'));
     }
+
+    public function testDisableAndEnableSetTheDisabledFlag(): void
+    {
+        $transport = new FakeTransport();
+        $transport->pushRead(
+            $this->sentenceBytes('!re', ['=.id=*2', '=name=joao', '.tag=1'])
+            . $this->sentenceBytes('!done', ['.tag=1'])
+        );
+
+        $client = Client::fromConnection(new Connection($transport));
+        $queue = $client->simpleQueue();
+
+        $result = null;
+        $fiber = new \Fiber(function () use ($queue, &$result) {
+            $result = $queue->disable('joao');
+        });
+        $fiber->start();
+        $this->assertTrue($fiber->isSuspended());
+        $transport->pushRead($this->sentenceBytes('!done', ['.tag=2']));
+
+        $this->assertTrue($result);
+        $sent = implode('', $transport->writtenLog());
+        $this->assertStringContainsString('/queue/simple/set', $sent);
+        $this->assertStringContainsString('=disabled=yes', $sent);
+    }
 }

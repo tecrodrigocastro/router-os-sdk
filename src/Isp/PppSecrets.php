@@ -59,6 +59,21 @@ final class PppSecrets
     }
 
     /**
+     * Disable a secret (rejects future dial-in attempts) without deleting
+     * it — reversible via enable(). Does not drop an already-active
+     * session; pair with kill() if you need that too.
+     */
+    public function disable(string $name): bool
+    {
+        return $this->client->setWhere('/ppp/secret', ['name' => $name], ['disabled' => 'yes']) > 0;
+    }
+
+    public function enable(string $name): bool
+    {
+        return $this->client->setWhere('/ppp/secret', ['name' => $name], ['disabled' => 'no']) > 0;
+    }
+
+    /**
      * @return array<int, array<string, string>> active sessions, optionally filtered by secret name
      */
     public function activeSessions(?string $name = null): array

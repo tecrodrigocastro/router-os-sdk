@@ -37,4 +37,14 @@ final class SimpleQueue
     {
         return $this->client->setWhere('/queue/simple', ['name' => $name], ['max-limit' => $maxLimit]) > 0;
     }
+
+    public function disable(string $name): bool
+    {
+        return $this->client->setWhere('/queue/simple', ['name' => $name], ['disabled' => 'yes']) > 0;
+    }
+
+    public function enable(string $name): bool
+    {
+        return $this->client->setWhere('/queue/simple', ['name' => $name], ['disabled' => 'no']) > 0;
+    }
 }
