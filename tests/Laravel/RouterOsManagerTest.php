@@ -91,6 +91,48 @@ final class RouterOsManagerTest extends TestCase
         $manager->connection('does-not-exist');
     }
 
+    public function testRegisterConnectionAddsAConnectionNotKnownAtConstruction(): void
+    {
+        $manager = new RouterOsManager(
+            connectionsConfig: ['main' => ['host' => 'a']],
+            default: 'main',
+            connector: fn (array $config) => Client::fromConnection(new Connection(new FakeTransport())),
+        );
+
+        $this->assertFalse($manager->hasConnection('equipment-42'));
+
+        $manager->registerConnection('equipment-42', ['host' => 'dynamic']);
+
+        $this->assertTrue($manager->hasConnection('equipment-42'));
+        $client = $manager->connection('equipment-42');
+        $this->assertFalse($client->isClosed());
+    }
+
+    public function testForgetConnectionConfigDropsConfigAndCachedClient(): void
+    {
+        $attempts = 0;
+
+        $manager = new RouterOsManager(
+            connectionsConfig: [],
+            default: 'main',
+            connector: function () use (&$attempts) {
+                $attempts++;
+
+                return Client::fromConnection(new Connection(new FakeTransport()));
+            },
+        );
+
+        $manager->registerConnection('main', ['host' => 'a']);
+        $manager->connection('main');
+        $this->assertSame(1, $attempts);
+
+        $manager->forgetConnectionConfig('main');
+
+        $this->assertFalse($manager->hasConnection('main'));
+        $this->expectException(ConfigException::class);
+        $manager->connection('main');
+    }
+
     public function testClosedConnectionIsRebuiltOnNextAccess(): void
     {
         $builds = [];

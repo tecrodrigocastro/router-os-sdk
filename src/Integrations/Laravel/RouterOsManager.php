@@ -51,7 +51,7 @@ final class RouterOsManager
      * @param (callable(): float)|null $now override for tests — defaults to microtime(true)
      */
     public function __construct(
-        private readonly array $connectionsConfig,
+        private array $connectionsConfig,
         private readonly string $default,
         ?callable $connector = null,
         private readonly float $reconnectCooldownSeconds = 5.0,
@@ -105,6 +105,38 @@ final class RouterOsManager
     public function forgetConnection(?string $name = null): void
     {
         unset($this->connections[$name ?? $this->default]);
+    }
+
+    /**
+     * Register (or overwrite) a connection's config at runtime — for
+     * connections that aren't known statically at boot (e.g. one per row
+     * in a database table), unlike config/router-os.php's fixed list.
+     * Overwriting a name that already has a cached Client does NOT close
+     * it; call forgetConnectionConfig() first if you need the new config
+     * to take effect on the very next connection() call.
+     *
+     * @param array<string, mixed> $config
+     */
+    public function registerConnection(string $name, array $config): void
+    {
+        $this->connectionsConfig[$name] = $config;
+    }
+
+    public function hasConnection(string $name): bool
+    {
+        return isset($this->connectionsConfig[$name]);
+    }
+
+    /**
+     * Fully deregister a connection: drops its config, any cached Client,
+     * and any cooldown state — the next connection($name) call throws
+     * ConfigException until it's registered again. Use when a router is
+     * deleted/reassigned, not just when it's temporarily unreachable (for
+     * that, the cooldown already handles it — see the class docblock).
+     */
+    public function forgetConnectionConfig(string $name): void
+    {
+        unset($this->connectionsConfig[$name], $this->connections[$name], $this->lastFailureAt[$name]);
     }
 
     /**
