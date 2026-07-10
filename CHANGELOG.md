@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-10
+
+### Added
+
+- Laravel integration: `ServiceProvider`/`Facade` (auto-discovered),
+  `RouterOsManager` connection registry (`database.php`-style `default` +
+  `connections` config), and a publishable `config/router-os.php`.
+- `RouterOsManager` auto-heals a connection that goes dead
+  (`Client::isClosed()`) on its *next* access — useful for long-lived
+  processes (queue workers, Octane). It deliberately does not retry the
+  command that actually failed, to avoid double-executing a non-idempotent
+  RouterOS command if it reached the router and only the reply was lost.
+
 ## [0.1.1] - 2026-07-10
 
 ### Added
@@ -44,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/tecrodrigocastro/router-os-sdk/releases/tag/v0.1.0

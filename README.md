@@ -89,6 +89,32 @@ $query->where('disabled', 'false')
 $running = $client->query($query);
 ```
 
+### Laravel
+
+The `ServiceProvider`/`Facade` are auto-discovered — just install the
+package and publish the config:
+
+```bash
+php artisan vendor:publish --provider="RouterOS\Sdk\Integrations\Laravel\ServiceProvider" --tag=config
+```
+
+`config/router-os.php` follows the same `default` + `connections` shape as
+`database.php`, so a second router is just another entry away. Then:
+
+```php
+use RouterOS\Sdk\Integrations\Laravel\Facade as RouterOs;
+
+$interfaces = RouterOs::write('/interface/print');            // default connection
+$interfaces = RouterOs::connection('secondary')->write(...);  // named connection
+```
+
+`RouterOsManager` (what the facade resolves to) auto-heals: a connection
+that goes dead (`Client::isClosed()`) is rebuilt on the *next* call, which
+matters for long-lived processes (queue workers, Octane) — but it never
+silently retries the command that actually failed, since that could
+double-execute a non-idempotent one (e.g. `/ip/address/add`) if the
+command reached the router and only the reply was lost.
+
 ### Concurrency
 
 `write()` and `listen()`/`interval()` already work concurrently against
@@ -118,7 +144,7 @@ composer install
 composer test
 ```
 
-64 tests, including a real end-to-end test over a loopback TCP socket and a
+77 tests, including a real end-to-end test over a loopback TCP socket and a
 genuine two-Fiber concurrency test against a real socket.
 
 ## Roadmap
@@ -126,7 +152,6 @@ genuine two-Fiber concurrency test against a real socket.
 - `SwooleTransport` + auto-detection, for coroutine-native concurrency
   under Hyperf and Laravel Octane (Swoole mode) with no manual `Reactor`
   driving required.
-- Laravel integration (`ServiceProvider`/`Facade`).
 - Hyperf integration (`ConfigProvider` + coroutine connection pool).
 
 Contributions on any of the above are welcome.
