@@ -157,6 +157,12 @@ $client->customer('joao')->activate(address: '10.0.0.5', pppUser: 'joao', queueN
 
 See `examples/isp-toolkit.php` for a runnable version.
 
+`RouterOS\Sdk\Isp\RadiusBootstrapScript::generate()` produces a `.rsc` script
+that registers a FreeRADIUS server as the PPP AAA backend on a fresh router
+(`/radius add` + `/ppp aaa set use-radius=yes`) — a router needs this before
+credentials written to `radcheck`/`radreply` have any effect. Pure string
+templating, no connection needed — see `examples/radius-bootstrap.php`.
+
 ### VPN (WireGuard)
 
 `RouterOS\Sdk\Vpn\WireGuard` configures RouterOS 7's native WireGuard
@@ -298,7 +304,7 @@ composer install
 composer test
 ```
 
-139 tests, including a real end-to-end test over a loopback TCP socket and a
+143 tests, including a real end-to-end test over a loopback TCP socket and a
 genuine two-Fiber concurrency test against a real socket.
 
 ## Roadmap

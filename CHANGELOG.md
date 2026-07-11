@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-10
+
+### Added
+
+- `RouterOS\Sdk\Isp\RadiusBootstrapScript`: generates a `.rsc` script that
+  registers a FreeRADIUS server as the PPP AAA backend on a fresh router
+  (`/radius add` + `/ppp aaa set use-radius=yes`) — pure string templating,
+  no connection needed, same shape as `Vpn\WireGuardBootstrapScript`.
+- `examples/pppoe-lab.php`: interactive PPPoE lab test script — creates a
+  customer secret, waits for a real CPE to dial in, then walks through
+  `suspend()`/`activate()` against a live session.
+
 ## [0.5.0] - 2026-07-10
 
 ### Added
@@ -144,7 +156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown/expired tag packets, multi-block `!done` responses (seen on some
   wireless APs), and interval-stream `!done` cycle boundaries.
 
-[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/tecrodrigocastro/router-os-sdk/compare/v0.3.0...v0.3.1
