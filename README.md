@@ -40,6 +40,18 @@ only show up once you push a client hard in production.
   long-running processes; the Laravel `RouterOsManager` auto-heals a dead
   connection on next use and fails fast (no full `connect_timeout` wait)
   if the router recently failed.
+- **ISP/telecom toolkit** (`RouterOS\Sdk\Isp\*`) — PPPoE secrets and active
+  sessions, PPP profiles, address-list blocking, simple queues and queue
+  trees, idempotent firewall rules, and `Customer::suspend()`/`activate()`:
+  a unified customer-lifecycle operation that touches all of the above in
+  one call, each action isolated (one failing doesn't stop the others).
+- **Native WireGuard support** (`RouterOS\Sdk\Vpn\WireGuard`) — configure
+  RouterOS 7's built-in WireGuard interface and peers directly, no separate
+  VPN server needed.
+- **Bootstrap script generators** for a router with no connectivity yet:
+  `WireGuardBootstrapScript` (dial-home VPN tunnel) and
+  `RadiusBootstrapScript` (register FreeRADIUS as the PPP AAA backend) —
+  pure string templating, print-and-paste into a fresh router's terminal.
 
 ## Requirements
 
